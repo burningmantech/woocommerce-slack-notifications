@@ -143,7 +143,7 @@ class wp_slack_woocommerce {
 	}
 	public function dequeue_enqueue() {
 		if(!is_plugin_active('woocommerce-gateway-firstdata/woocommerce-gateway-first-data.php'))  {
-			wp_enqueue_script( 	'woocommerce-slack', 		'/wp-content/plugins/woocommerce-slack/assets/js/payeezy-google-notifications.js', 		array( 'jquery' ), time(), true );
+			wp_enqueue_script( 	'woocommerce-slack', 		'/wp-content/plugins/woocommerce-slack/assets/js/woocommerce-cart-error-dom.js', 		array( 'jquery' ), time(), true );
 		}
 	}
 	public function payeezy_testmode_check() {
