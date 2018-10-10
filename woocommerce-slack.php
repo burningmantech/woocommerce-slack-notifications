@@ -142,7 +142,7 @@ class wp_slack_woocommerce {
 		die();
 	}
 	public function dequeue_enqueue() {
-		if(!is_plugin_active('woocommerce-gateway-firstdata/woocommerce-gateway-first-data.php'))  {
+		if(is_plugin_active('woocommerce-gateway-firstdata/woocommerce-gateway-first-data.php'))  {
 			wp_enqueue_script( 	'woocommerce-slack', 		'/wp-content/plugins/woocommerce-slack/assets/js/woocommerce-cart-error-dom.js', 		array( 'jquery' ), time(), true );
 		}
 	}
