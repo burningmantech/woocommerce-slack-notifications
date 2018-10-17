@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Slack Integration
  * Plugin URI: 
  * Description: This plugin allows you to send notifications to Slack channels whenever payment in WooCommerce is marked as complete.
- * Version: 1.0.2
+ * Version: 1.1.0
  * Author: Trevor Bice
  * Text Domain: slack-woocommerce
  * Domain Path: /languages
