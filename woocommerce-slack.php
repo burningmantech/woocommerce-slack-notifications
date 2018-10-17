@@ -10,11 +10,14 @@
  * License: GPL v2 or later
  */
 
+
+
 class wp_slack_woocommerce {
 	
 	private static $instance = false;
 	private $wpengine;
 	
+
 	public static function instance() {
 		if ( ! self::$instance ) {
 			self::$instance = new self;
@@ -22,33 +25,74 @@ class wp_slack_woocommerce {
 		}
 		return self::$instance;
 	}
- 	public function init() {
-		/*
-		if ( ! wp_next_scheduled( 'clickandpledge_testmode_check' ) ) {
-			wp_schedule_event( time(), 'hourly', array( self::instance(), 'clickandpledge_testmode_check') );
+ 	public function init() {		
+		add_action( 'init', 						array( $this, 	'wp_init'), 10, 3 );	
+		add_action( 'admin_init', 					array( $this, 	'wp_admin_init'), 10, 3 );
+	}
+	public function wp_admin_init(){
+		$plugin_path = 'woocommerce-click-pledge-gateway/gateway-clickandpledge.php';
+		if( (is_plugin_active($plugin_path) || is_plugin_inactive($plugin_path))
+			&& file_exists(ABSPATH . '/wp-content/plugins/'.$plugin_path) ) {
+			add_action( 'deactivate_'.$plugin_path, 	array( $this, 'clickandpledge_deactivate')); 
+			add_action( 'activate_'.$plugin_path, 		array( $this, 'clickandpledge_activate')); 
 		}
-		*/
+
+		$plugin_path = 'woocommerce-gateway-firstdata/woocommerce-gateway-first-data.php';
+		if( (is_plugin_active($plugin_path) || is_plugin_inactive($plugin_path))
+			&& file_exists(ABSPATH . '/wp-content/plugins/'.$plugin_path) ) {
+			add_action( 'deactivate_'.$plugin_path, 	array( $this, 'payeezy_deactivate')); 
+			add_action( 'activate_'.$plugin_path, 		array( $this, 'payeezy_activate')); 
+		}
+	}
+	public function wp_init() {
+		/*
+		if ( ! wp_next _scheduled( 'clickandpledge_testmode_check' ) ) {
+			wp_schedule_event( time(), 'hourly', array( $this, 'clickandpledge_testmode_check') );
+		}
+
+		
+		*/	
 		$enabled = get_option( 'wc_settings_tab_slack_woocommerce_enable_notifications' );
 		if( $enabled == 'yes' ){	
-			add_filter( 'woocommerce_payment_complete_order_status', 		array( self::instance(), 'rfvc_update_order_status'), 10, 2 );
-			add_action( 'woocommerce_order_status_completed', 			array( self::instance(), 'mysite_woocommerce_order_status_completed'));
-			add_action( 'woocommerce_order_status_cancelled', 			array( self::instance(), 'mysite_woocommerce_order_status_cancelled'));
-			add_action( 'transition_post_status',  						array( self::instance(), 'post_status_change'), 10, 3 ); 
-			add_action( 'woocommerce_update_options', 					array( self::instance(), 'payeezy_testmode_check'), 10, 1 ); 
+			add_filter( 'woocommerce_payment_complete_order_status', 	array( $this, 'rfvc_update_order_status'), 10, 2 );
+			add_action( 'woocommerce_order_status_completed', 			array( $this, 'mysite_woocommerce_order_status_completed'));
+			add_action( 'woocommerce_order_status_cancelled', 			array( $this, 'mysite_woocommerce_order_status_cancelled'));
+			add_action( 'transition_post_status',  						array( $this, 'post_status_change'), 10, 3 ); 
+
+			add_action( 'woocommerce_update_options', 							array( $this, 'testmode_check'), 10, 1 );
+			
+			
+ 
 		}
 		if( is_admin()) {
 			// Only register the AJAX for admins
-			add_action( 'wp_ajax_test_slack', 								array( self::instance(), 'test_slack' ) ); 
-			add_filter( 'woocommerce_settings_tabs_array', 					array( self::instance(), 'woo_new_section_tabs'), 50);
-			add_action( 'woocommerce_settings_tabs_settings_slack_woocommerce', 	array( self::instance(), 'settings_tab') );
-			add_action( 'woocommerce_update_options_settings_slack_woocommerce', 	array( self::instance(), 'update_settings') );
+			add_action( 'wp_ajax_test_slack', 									array( $this, 'test_slack' ) ); 
+			add_filter( 'woocommerce_settings_tabs_array', 						array( $this, 'woo_new_section_tabs'), 50);
+			add_action( 'woocommerce_settings_tabs_settings_slack_woocommerce', 	array( $this, 'settings_tab') );
+			add_action( 'woocommerce_update_options_settings_slack_woocommerce', 	array( $this, 'update_settings') );
 			
 			
-			add_action( 'in_admin_footer', 								array( self::instance(), 'enqueue_scripts'));
+			add_action( 'in_admin_footer', 										array( $this, 'enqueue_scripts'));
 		}
-		add_action( 'payeezy_testmode_check', 								array( self::instance(), 'payeezy_testmode_check') );
-		add_action( 'wp_enqueue_scripts', 									array( self::instance(), 'dequeue_enqueue'), 70 );
+		add_action( 'testmode_check', 											array( $this, 'testmode_check') );
+		add_action( 'wp_enqueue_scripts', 										array( $this, 'dequeue_enqueue'), 70 );
 		add_action( 'wp_ajax_record_woocommerce_errors', 						array( $this, 'ajax_record_woocommerce_errors') );
+		
+	}
+	public function testmode_check() {
+		// Only check for payeezy if it exists
+
+		$plugin_path = 'woocommerce-gateway-firstdata/woocommerce-gateway-first-data.php';
+		if( (is_plugin_active($plugin_path) || is_plugin_inactive($plugin_path))
+			&& file_exists(ABSPATH . '/wp-content/plugins/'.$plugin_path) ) {
+			$this->payeezy_testmode_check();
+		}
+
+		$plugin_path = 'woocommerce-click-pledge-gateway/gateway-clickandpledge.php';
+		if( (is_plugin_active($plugin_path) || is_plugin_inactive($plugin_path))
+			&& file_exists(ABSPATH . '/wp-content/plugins/'.$plugin_path) ) {
+			$this->clickandpledge_testmode_check();
+		}
 	}
 	public function send_bulk_ga_data($data){
 		$gap_options 	= get_option('gap_options');
@@ -149,23 +193,20 @@ class wp_slack_woocommerce {
 	public function payeezy_testmode_check() {
 		// Don't check for WPEngine yet, need to test first
 		if( is_wpe()) {
-			
-	
-		
 			$settings = get_option('woocommerce_first_data_payeezy_gateway_credit_card_settings');
 			if(!is_plugin_active('woocommerce-gateway-firstdata/woocommerce-gateway-first-data.php'))  {
 				update_option( 'woocommerce_pe_active', 'false');
 				$message 	= "WARNING: Production website's Payeezy Gateway is in not active!";
 				$icon 	= ":warning:";
 				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-				self::slack_message($message,  "Payeezy Gateway no Active", $channel, $icon);
+				$this->slack_message($message,  "Payeezy Gateway no Active", $channel, $icon);
 			}
 			else {
 				if(get_option('woocommerce_pe_active')=='false'){
 					$message 	= " Production website's Payeezy Gateway is active!";
 					$icon 	= ":heavy_check_mark:";
 					$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-					self::slack_message($message,  "Payeezy Gateway Active", $channel, $icon);
+					$this->slack_message($message,  "Payeezy Gateway Active", $channel, $icon);
 				}
 				update_option( 'woocommerce_pe_active', 'true');
 			}	
@@ -175,14 +216,14 @@ class wp_slack_woocommerce {
 				$message 	= "WARNING: Production website's Payeezy Gateway Environment is set to Demo";
 				$icon 	= ":warning:";
 				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-				self::slack_message($message, "Payeezy Gateway Environment set to Demo", $channel, $icon);
+				$this->slack_message($message, "Payeezy Gateway Environment set to Demo", $channel, $icon);
 			}
 			else {
 				if(get_option('woocommerce_pe_testmode')=='true'){
 					$message 	= "Production website's Payeezy Gateway Environment is set to Production";
 					$icon 	= ":heavy_check_mark:";
 					$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-					self::slack_message($message, "Payeezy Environment set to Production", $channel, $icon);
+					$this->slack_message($message, "Payeezy Environment set to Production", $channel, $icon);
 				}
 				update_option( 'woocommerce_pe_testmode', 'false');
 			}
@@ -192,73 +233,72 @@ class wp_slack_woocommerce {
 				$message 	= "WARNING: Production website's Payeezy Gateway is not enabled";
 				$icon 	= ":warning:";
 				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-				self::slack_message($message,  "Payeezy disabled", $channel, $icon);
+				$this->slack_message($message,  "Payeezy disabled", $channel, $icon);
 			}
 			else if($settings['enabled']=='yes'){
 				if(get_option('woocommerce_pe_enabled')=='false'){
 					$message 	= "Production website's Payeezy Gateway is enabled";
 					$icon 	= ":heavy_check_mark:";
 					$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-					self::slack_message($message, "Payeezy Gateway enabled", $channel, $icon);
+					$this->slack_message($message, "Payeezy Gateway enabled", $channel, $icon);
 				}
 				update_option( 'woocommerce_pe_enabled', 'true');
 			}
 		}
 		
 	}
+	public function clickandpledge_activate(){
+		$message 	= " Production website's Click and Pledge Gateway is active!";
+		$icon 		= ":heavy_check_mark:";
+		$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
+		self::slack_message($message, "Click and Pledge Active", $channel, $icon);
+	}
+	public function clickandpledge_deactivate(){
+		$message 	= "WARNING: Production website's Click and Pledge Gateway is in not active!";
+		$icon 		= ":warning:";
+		$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
+		self::slack_message($message, "Click and Pledge Inactive", $channel, $icon);
+	}
 	public function clickandpledge_testmode_check() {
 		if( is_wpe()) {
-			$settings = get_option('woocommerce_clickandpledge_settings');
-			if(!is_plugin_active('woocommerce-click-pledge-gateway/gateway-clickandpledge.php'))  {
-				update_option( 'woocommerce_pe_active', 'false');
-				$message 	= "WARNING: Production website's Click and Pledge Gateway is in not active!";
-				$icon 	= ":warning:";
-				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-				self::slack_message($message,  "Click and Pledge no Active", $channel, $icon);
-			}
-			else {
-				if(get_option('woocommerce_pe_active')=='false'){
-					$message 	= " Production website's Click and Pledge Gateway is active!";
-					$icon 	= ":heavy_check_mark:";
-					$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-					self::slack_message($message,  "Click and Pledge Active", $channel, $icon);
-				}
-				update_option( 'woocommerce_pe_active', 'true');
-			}	
-			
-			if($settings['testmode']=='yes'){
-				update_option( 'woocommerce_pe_testmode', 'true');
+			$settings 	= get_option('woocommerce_clickandpledge_settings');
+			$p_settings = get_option('woocommerce_clickandpledge_paymentsettings');
+
+			if($p_settings['testmode']=='yes'){
+				update_option( 'woocommerce_cp_testmode', 'true');
 				$message 	= "WARNING: Production website's Click and Pledge Gateway is in Testmode";
 				$icon 	= ":warning:";
 				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
 				self::slack_message($message, "Click and Pledge in Testmode", $channel, $icon);
 			}
 			else {
-				if(get_option('woocommerce_pe_testmode')=='true'){
+				if(get_option('woocommerce_cp_testmode')=='true'){
 					$message 	= "Production website's Click and Pledge Gateway is in Production";
 					$icon 	= ":heavy_check_mark:";
 					$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
 					self::slack_message($message, "Click and Pledge in Production", $channel, $icon);
 				}
-				update_option( 'woocommerce_pe_testmode', 'false');
+				update_option( 'woocommerce_cp_testmode', 'false');
 			}
 			
-			if($settings['enabled']=='no'){
-				update_option( 'woocommerce_pe_enabled', 'false');
-				$message 	= "WARNING: Production website's Click and Pledge Gateway is not enabled";
-				$icon 	= ":warning:";
-				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-				self::slack_message($message,  "Click and Pledge disabled", $channel, $icon);
-			}
-			else {
-				if(get_option('woocommerce_pe_enabled')=='false'){
+			if($p_settings['enabled']=='yes'){
+				if(get_option('woocommerce_cp_enabled')=='false'){
 					$message 	= "Production website's Click and Pledge Gateway is enabled";
 					$icon 	= ":heavy_check_mark:";
 					$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
 					self::slack_message($message, "Click and Pledge enabled", $channel, $icon);
 				}
-				update_option( 'woocommerce_pe_enabled', 'true');
+				update_option( 'woocommerce_cp_enabled', 'true');
+				
 			}
+			else{
+				update_option( 'woocommerce_cp_enabled', 'false');
+				$message 	= "WARNING: Production website's Click and Pledge Gateway is not enabled";
+				$icon 	= ":warning:";
+				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
+				self::slack_message($message,  "Click and Pledge disabled", $channel, $icon);
+			}
+			
 		}
 		
 	}
@@ -319,7 +359,7 @@ Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->
 		$channel 	= "#".get_option( 'wc_settings_tab_slack_woocommerce_channel' );
 
 	
-		self::slack_message($message, "Marketplace Purchase", $channel, $icon);
+		$this->slack_message($message, "Marketplace Purchase", $channel, $icon);
 		
 		wp_die();	
 	}
@@ -407,9 +447,8 @@ Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->
 			}	
 		}
 	}
-	public function slack_message($message, $username, $channel, $icon = ":robot_face:")	{
+	public static function slack_message($message, $username, $channel, $icon = ":robot_face:")	{	
 		$token = get_option( 'wc_settings_tab_slack_token' );
-		
 		$ch = curl_init("https://slack.com/api/chat.postMessage");
 		$data = http_build_query(array(
 			"token" 		=> $token,
@@ -448,7 +487,7 @@ Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->
 Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->data['billing']['last_name']."* for *$".number_format($order->data['total'],2)."* has been completed".json_encode($order);
 	$channel 	= "#".get_option( 'wc_settings_tab_slack_woocommerce_channel' );
 	$icon	= get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_confirmed' );
-		self::slack_message($message, "Order Completed", $channel, $icon);
+		$this->slack_message($message, "Order Completed", $channel, $icon);
 	}
 	public function mysite_woocommerce_order_status_cancelled( $order_id ) {
 		$order = wc_get_order( $order_id );
@@ -466,7 +505,7 @@ Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->
 Order  *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->data['billing']['last_name']."* for *$".number_format($order->data['total'],2)."* has been cancelled".json_encode($order);
 		$channel 	= "#".get_option( 'wc_settings_tab_slack_woocommerce_channel' );
 		$icon	= get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_cancelled' );
-		self::slack_message($message, "Order Cancelled", $channel, $icon);
+		$this->slack_message($message, "Order Cancelled", $channel, $icon);
 	}
 }
 $wp_slack_woocommerce = new wp_slack_woocommerce;
