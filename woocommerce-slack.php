@@ -498,7 +498,7 @@ Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->
 		if($status=='failed'){
 			$hasbeen = 'has';
 		}
-		product_name = preg_replace("# - Other#", "",$product['name'] );
+		$product_name = preg_replace("# - Other#", "",$product['name'] );
 		$message = $product_name."  
 Order  *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->data['billing']['last_name']."* for *$".number_format($order->data['total'],2)."* ".$hasbeen." ".$status;
 		$channel 	= "#".get_option( 'wc_settings_tab_slack_woocommerce_channel' );
