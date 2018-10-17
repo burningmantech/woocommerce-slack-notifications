@@ -2,7 +2,7 @@
 
 Installing
 You will need to have administrator rights in Slack in order to be able to fully install this plugin.
-1) Install & Activate plugin in Wordpress Plugins
+1) Install & Activate plugin in Wordpress Plugins on whatever Wordpress installation you are using
 2) Visit https://api.slack.com/ and log into the burningman account
 3) Click 'Start Building'
 4) After you have named and created your App, click the 'Basic Information' tab and 'Add Features and Functionality' slider
