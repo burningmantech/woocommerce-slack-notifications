@@ -190,61 +190,58 @@ class wp_slack_woocommerce {
 			wp_enqueue_script( 	'woocommerce-slack', 		'/wp-content/plugins/woocommerce-slack/assets/js/woocommerce-cart-error-dom.js', 		array( 'jquery' ), time(), true );
 		}
 	}
+	public function payeezy_activate(){
+		$message 	= " Production website's Click and Pledge Gateway is active!";
+		$icon 		= ":heavy_check_mark:";
+		$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
+		self::slack_message($message, "Click and Pledge Active", $channel, $icon);
+	}
+	public function payeezy_deactivate(){
+		$message 	= "WARNING: Production website's Click and Pledge Gateway is in not active!";
+		$icon 		= ":warning:";
+		$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
+		self::slack_message($message, "Click and Pledge Inactive", $channel, $icon);
+	}
 	public function payeezy_testmode_check() {
 		// Don't check for WPEngine yet, need to test first
-		if( is_wpe()) {
-			$settings = get_option('woocommerce_first_data_payeezy_gateway_credit_card_settings');
-			if(!is_plugin_active('woocommerce-gateway-firstdata/woocommerce-gateway-first-data.php'))  {
-				update_option( 'woocommerce_pe_active', 'false');
-				$message 	= "WARNING: Production website's Payeezy Gateway is in not active!";
-				$icon 	= ":warning:";
-				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-				$this->slack_message($message,  "Payeezy Gateway no Active", $channel, $icon);
-			}
-			else {
-				if(get_option('woocommerce_pe_active')=='false'){
-					$message 	= " Production website's Payeezy Gateway is active!";
-					$icon 	= ":heavy_check_mark:";
-					$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-					$this->slack_message($message,  "Payeezy Gateway Active", $channel, $icon);
-				}
-				update_option( 'woocommerce_pe_active', 'true');
-			}	
-			
-			if($settings['environment']=='demo'){
-				update_option( 'woocommerce_pe_testmode', 'true');
-				$message 	= "WARNING: Production website's Payeezy Gateway Environment is set to Demo";
-				$icon 	= ":warning:";
-				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-				$this->slack_message($message, "Payeezy Gateway Environment set to Demo", $channel, $icon);
-			}
-			else {
-				if(get_option('woocommerce_pe_testmode')=='true'){
-					$message 	= "Production website's Payeezy Gateway Environment is set to Production";
-					$icon 	= ":heavy_check_mark:";
-					$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-					$this->slack_message($message, "Payeezy Environment set to Production", $channel, $icon);
-				}
-				update_option( 'woocommerce_pe_testmode', 'false');
-			}
-			
-			if($settings['enabled']=='no'){
-				update_option( 'woocommerce_pe_enabled', 'false');
-				$message 	= "WARNING: Production website's Payeezy Gateway is not enabled";
-				$icon 	= ":warning:";
-				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-				$this->slack_message($message,  "Payeezy disabled", $channel, $icon);
-			}
-			else if($settings['enabled']=='yes'){
-				if(get_option('woocommerce_pe_enabled')=='false'){
-					$message 	= "Production website's Payeezy Gateway is enabled";
-					$icon 	= ":heavy_check_mark:";
-					$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-					$this->slack_message($message, "Payeezy Gateway enabled", $channel, $icon);
-				}
-				update_option( 'woocommerce_pe_enabled', 'true');
-			}
+		
+		$settings = get_option('woocommerce_first_data_payeezy_gateway_credit_card_settings');
+		
+		
+		if($settings['environment']=='demo' && get_option('woocommerce_pe_testmode')!='true'){
+			update_option( 'woocommerce_pe_testmode', 'true');
+			$message 	= "WARNING: Production website's Payeezy Gateway Environment is set to Demo";
+			$icon 	= ":warning:";
+			$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
+			$this->slack_message($message, "Payeezy Gateway Environment set to Demo", $channel, $icon);
 		}
+		else if($settings['environment']=='production') {
+			if(get_option('woocommerce_pe_testmode')=='true'){
+				$message 	= "Production website's Payeezy Gateway Environment is set to Production";
+				$icon 	= ":heavy_check_mark:";
+				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
+				$this->slack_message($message, "Payeezy Environment set to Production", $channel, $icon);
+			}
+			update_option( 'woocommerce_pe_testmode', 'false');
+		}
+
+		if($settings['enabled']=='no' && get_option('woocommerce_pe_enabled')!='false'){
+			update_option( 'woocommerce_pe_enabled', 'false');
+			$message 	= "WARNING: Production website's Payeezy Gateway is not enabled";
+			$icon 	= ":warning:";
+			$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
+			$this->slack_message($message,  "Payeezy disabled", $channel, $icon);
+		}
+		else if($settings['enabled']=='yes'){
+			if(get_option('woocommerce_pe_enabled')=='false'){
+				$message 	= "Production website's Payeezy Gateway is enabled";
+				$icon 	= ":heavy_check_mark:";
+				$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
+				$this->slack_message($message, "Payeezy Gateway enabled", $channel, $icon);
+			}
+			update_option( 'woocommerce_pe_enabled', 'true');
+		}
+
 		
 	}
 	public function clickandpledge_activate(){
