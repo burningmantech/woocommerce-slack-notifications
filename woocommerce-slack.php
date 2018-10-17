@@ -57,6 +57,7 @@ class wp_slack_woocommerce {
 			add_filter( 'woocommerce_payment_complete_order_status', 	array( $this, 'rfvc_update_order_status'), 10, 2 );
 			add_action( 'woocommerce_order_status_completed', 			array( $this, 'mysite_woocommerce_order_status_completed'));
 			add_action( 'woocommerce_order_status_cancelled', 			array( $this, 'mysite_woocommerce_order_status_cancelled'));
+			add_action( 'woocommerce_order_status_failed', 				array( $this, 'mysite_woocommerce_order_status_failed'));
 			add_action( 'transition_post_status',  						array( $this, 'post_status_change'), 10, 3 ); 
 
 			add_action( 'woocommerce_update_options', 							array( $this, 'testmode_check'), 10, 1 );
@@ -335,7 +336,7 @@ jQuery(window).ready(function(){
 	public static function test_slack() {
 		$order = wc_get_order( self::get_last_order_id() );
 		if($order->status=='processing' || $order->status=='completed'){
-			$icon	= get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_confirmed' );
+			$icon	= get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_completed' );
 			$status 	= "completed";
 		}
 		else {
@@ -397,13 +398,19 @@ Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->
 			  'name' => __( 'Confirmed Icon', 'wp-slack-woocommerce' ),
 			  'type' => 'text',
 			  'desc' => __( '', 'wp-slack-woocommerce' ),
-			  'id'   => 'wc_settings_tab_slack_woocommerce_slack_icon_confirmed'
+			  'id'   => 'wc_settings_tab_slack_woocommerce_slack_icon_completed'
 		   ),
 		   'icon-cancel' => array(
 			  'name' => __( 'Cancelled Icon', 'wp-slack-woocommerce' ),
 			  'type' => 'text',
 			  'desc' => __( '', 'wp-slack-woocommerce' ),
 			  'id'   => 'wc_settings_tab_slack_woocommerce_slack_icon_cancelled'
+		   ),
+			'icon-fail' => array(
+			  'name' => __( 'Failed Icon', 'wp-slack-woocommerce' ),
+			  'type' => 'text',
+			  'desc' => __( '', 'wp-slack-woocommerce' ),
+			  'id'   => 'wc_settings_tab_slack_woocommerce_slack_icon_failed'
 		   ),
 		   'test_slack' => array(
 			  'name'     => __( '', 'wp-slack-woocommerce' ),
@@ -470,39 +477,35 @@ Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->
 		
 	}
 	public function mysite_woocommerce_order_status_completed( $order_id ) {
-		get_option( 'wc_settings_tab_slack_token' );
-		$order = wc_get_order( $order_id );
-				
-		$order_items = $order->get_items();
-		if( count($order_items)==1){
-			foreach ( $order_items  as $item_id => $item ) {
-				 $product = $item->get_data(); 
-			} 
-		}
-		//$product_name = preg_replace("# - Other#", "",$product['name'] );
-	$message = $product['name']." 
-Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->data['billing']['last_name']."* for *$".number_format($order->data['total'],2)."* has been completed";
-	$channel 	= "#".get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-	$icon	= get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_confirmed' );
-		$this->slack_message($message, "Order Completed", $channel, $icon);
+		$this->woocommerce_order_status_report($order_id, 'completed');
 	}
 	public function mysite_woocommerce_order_status_cancelled( $order_id ) {
+		$this->woocommerce_order_status_report($order_id, 'cancelled');
+	}
+	public function mysite_woocommerce_order_status_failed( $order_id ) {
+		$this->woocommerce_order_status_report($order_id, 'failed');
+	}
+	public function woocommerce_order_status_report($order_id, $status){
 		$order = wc_get_order( $order_id );
 		$order_items = $order->get_items();
 		if( count($order_items)==1){
 			foreach ( $order_items  as $item_id => $item ) {
-			
 				 $product = $item->get_data();
-				 
-				 
 			} 
 		}
-		//$product_name = preg_replace("# - Other#", "",$product['name'] );
+		
+		$hasbeen = 'has been';
+		if($status=='failed'){
+			$hasbeen = 'has';
+		}
+		
 		$message = $product_name."  
-Order  *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->data['billing']['last_name']."* for *$".number_format($order->data['total'],2)."* has been cancelled";
+Order  *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->data['billing']['last_name']."* for *$".number_format($order->data['total'],2)."* ".$hasbeen." ".$status;
 		$channel 	= "#".get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-		$icon	= get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_cancelled' );
-		$this->slack_message($message, "Order Cancelled", $channel, $icon);
+		if(get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_'.$status)){
+			$icon	= get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_'.$status);
+		}
+		$this->slack_message($message, "Order ".ucfirst($status), $channel, $icon);
 	}
 }
 $wp_slack_woocommerce = new wp_slack_woocommerce;
