@@ -324,17 +324,19 @@ jQuery(window).ready(function(){
 	    global $wpdb;
 	    $statuses = array_keys(wc_get_order_statuses());
 	    $statuses = implode( "','", $statuses );
-	
-	    // Getting last Order ID (max value)
-	    $results = $wpdb->get_col( "
+		$query = "
 		   SELECT MAX(ID) FROM {$wpdb->prefix}posts
 		   WHERE post_type LIKE 'shop_order'
 		   AND post_status IN ('$statuses')
-	    " );
+	    ";
+	    // Getting last Order ID (max value)
+	    $results = $wpdb->get_col($query);
 	    return reset($results);
 	}
 	public static function test_slack() {
-		$order = wc_get_order( self::get_last_order_id() );
+		
+		$order_id = self::get_last_order_id();
+		$order = wc_get_order( $order_id );
 		if($order->status=='processing' || $order->status=='completed'){
 			$icon	= get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_completed' );
 			$status 	= "completed";
@@ -357,7 +359,7 @@ Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->
 		$channel 	= "#".get_option( 'wc_settings_tab_slack_woocommerce_channel' );
 
 	
-		$this->slack_message($message, "Marketplace Purchase", $channel, $icon);
+		self::slack_message($message, "Order ".ucfirst($order->status). " TEST", $channel, $icon);
 		
 		wp_die();	
 	}
