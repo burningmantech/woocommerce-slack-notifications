@@ -481,7 +481,7 @@ Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->
 		}
 		//$product_name = preg_replace("# - Other#", "",$product['name'] );
 	$message = $product['name']." 
-Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->data['billing']['last_name']."* for *$".number_format($order->data['total'],2)."* has been completed".json_encode($order);
+Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->data['billing']['last_name']."* for *$".number_format($order->data['total'],2)."* has been completed";
 	$channel 	= "#".get_option( 'wc_settings_tab_slack_woocommerce_channel' );
 	$icon	= get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_confirmed' );
 		$this->slack_message($message, "Order Completed", $channel, $icon);
@@ -499,7 +499,7 @@ Order *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->
 		}
 		//$product_name = preg_replace("# - Other#", "",$product['name'] );
 		$message = $product_name."  
-Order  *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->data['billing']['last_name']."* for *$".number_format($order->data['total'],2)."* has been cancelled".json_encode($order);
+Order  *#".$order->ID."* by *".$order->data['billing']['first_name']." ".$order->data['billing']['last_name']."* for *$".number_format($order->data['total'],2)."* has been cancelled";
 		$channel 	= "#".get_option( 'wc_settings_tab_slack_woocommerce_channel' );
 		$icon	= get_option( 'wc_settings_tab_slack_woocommerce_slack_icon_cancelled' );
 		$this->slack_message($message, "Order Cancelled", $channel, $icon);
