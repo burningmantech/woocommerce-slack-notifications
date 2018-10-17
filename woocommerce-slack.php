@@ -191,16 +191,16 @@ class wp_slack_woocommerce {
 		}
 	}
 	public function payeezy_activate(){
-		$message 	= " Production website's Click and Pledge Gateway is active!";
+		$message 	= " Production website's Production website's Payeezy Gateway is active!";
 		$icon 		= ":heavy_check_mark:";
 		$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-		self::slack_message($message, "Click and Pledge Active", $channel, $icon);
+		self::slack_message($message, "Payeezy Gateway Plugin Active", $channel, $icon);
 	}
 	public function payeezy_deactivate(){
-		$message 	= "WARNING: Production website's Click and Pledge Gateway is in not active!";
+		$message 	= "WARNING: Production website's Production website's Payeezy Gateway is in not active!";
 		$icon 		= ":warning:";
 		$channel 	= get_option( 'wc_settings_tab_slack_woocommerce_channel' );
-		self::slack_message($message, "Click and Pledge Inactive", $channel, $icon);
+		self::slack_message($message, "Payeezy Gateway Plugin Inactive", $channel, $icon);
 	}
 	public function payeezy_testmode_check() {
 		// Don't check for WPEngine yet, need to test first
