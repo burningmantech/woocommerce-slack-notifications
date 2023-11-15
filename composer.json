@@ -1,0 +1,10 @@
+{
+    "name": "burningmantech/woocommerce-slack-notifications",
+    "description": "Trigger slack notifications when a WooCommerce order status is updated to canceled or completed.",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": "^7.4 || ^8.0"
+    },
+    "require-dev": {
+    }
+}
